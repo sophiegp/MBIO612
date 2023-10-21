@@ -1,0 +1,73 @@
+### Practical 5
+
+You are studying a fish phenotypic trait, "T," which you hypothesize is dominant over the alternative phenotype "t." In classical Mendelian genetics, the offspring of two heterozygous parents (Tt) should exhibit the dominant and recessive traits in a 3:1 ratio (three individuals with the dominant phenotype for every one individual with the recessive phenotype).
+
+In a tank containing only heterozygous parents (Tt), you inspect 350 juveniles and observe that 254 display the dominant trait (T) and 96 display the recessive trait (t). You aim to use simulation to test whether there's a statistically significant difference between the observed numbers of dominant and recessive traits (254:96) and what you would expect if the trait T is truly dominant in a 3:1 ratio (approximately 263 dominant: 87 recessive, given the sample size of 350).
+
+In other words, imagine a scenario where you have a large number of jars. Each jar contains an immense quantity of marbles that have an exact 3:1 ratio of black (representing the dominant trait) to white (indicative of the recessive trait) marbles. From each jar, you randomly select a sample of 350 marbles. Under the most typical circumstances, given the 3:1 ratio, you would expect to retrieve approximately 263 black and 87 white marbles from each jar.
+
+What you want to do here is to assess the probability of encountering a deviation from this anticipated outcome — specifically, how plausible it is to draw a sample comprising 254 black and 96 white marbles as was the case in your fish tank? How plausible it is to draw a distribution that diverges more substantially from the expected ratio, such as 200 black and 150 white marbles, from a jar. This evaluation helps determine whether the observed variations are within the realm of normal statistical fluctuations or if they signify an unusual event that defies the established 3:1 genetic dominance principle.
+
+Recall that the steps to carry out this analysis are as follows:
+
+1. Compute a test statistic to describe the observed difference between the expected and observed values.
+   Hint: this was covred in the `pdf`
+2. Quantify what is considered a normal sampling variation. In other words, use simulation to determine occurrnces resulting from normal statistical fluctuations. This involves simulating many instances of drawing 350 marbles from jars with a 3:1 ratio and seeing, using the test statistic above, the values that expects due to the randomness inherent to sampling alone.
+3. Compute an empirical p-value and explain your findings.
+
+Note that the approach described above is similar to the methodology discussed during our class exercise. However, unlike the procedure we followed in class, where we employed permutations as part of simulating a t-test-like process, this example doesn't necessitate permutations.
+
+```{r}
+####Compute test statistic to describe observed difference between expected and observed
+#set the observed counts of dominant and recessive
+obs_counts <- c(dominant = 254, recessive = 96)
+
+#set the 3:1 ratio of expected counts
+exp_counts <- c(dominant = 350 * 3/4, recessive = 350 * 1/4)
+
+#Compute chi-squared test statistic
+chi_squared <- sum((obs_counts - exp_counts)^2 / exp_counts)
+
+#observe test statistic
+chi_squared
+
+####Quantify what is considered a normal sampling variation.
+#number of simulations
+num_sim <- 10000
+
+#store test statistics
+statistics <- numeric(num_sim)
+
+#Perform 'for loop'
+for (i in 1:num_sim) {
+  #350 marbles from a jar with a 3:1 ratio
+  sim_sample <- sample(c("dominant", "recessive"), size = 350, replace = TRUE, prob = c(3/4, 1/4))
+  
+  #Calculate observed counts
+  sim_count <- table(sim_sample)
+  
+  #Calculate chi-squared test statistic
+  sim_statistic <- sum((sim_count - exp_counts)^2 / exp_counts)
+  
+  #Store test statistic
+  statistics[i] <- sim_statistic
+}
+
+#Observe the distribution of the data
+library(ggplot2)
+ggplot(data.frame(ChiSquared = statistics), aes(x = ChiSquared)) +
+  geom_histogram(binwidth = 1) +
+  geom_vline(xintercept = chi_squared) +
+  theme_minimal()
+
+####Compute p-value and explain findings
+p_value <- mean(statistics >= chi_squared)
+
+#Observe p-value and chi-squared value
+p_value
+chi_squared
+
+#The p-value is greater than 0.05, which means we reject the null hypothesis that the observed data is significantly different from the observed 3:1 ratio. In other words, the data follows a 3:1 ratio, as expected. 
+```
+
+
